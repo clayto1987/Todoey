@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class ToDoListViewController: UITableViewController {
+class ToDoListViewController: SwipeTableViewController {
 
     var toDoItems: Results<Item>?
     let realm = try! Realm()
@@ -18,6 +18,7 @@ class ToDoListViewController: UITableViewController {
         didSet {
             //runs as soon as variable is set to something other than nil.
             loadItems()
+            navigationItem.title = selectedCategory?.name
         }
     }
     
@@ -34,7 +35,7 @@ class ToDoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if let item = toDoItems?[indexPath.row] {
             cell.textLabel?.text = item.title
             //Ternary operator
@@ -114,6 +115,18 @@ class ToDoListViewController: UITableViewController {
     func loadItems() {
         toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
+    }
+    
+    override func updateModel(at indexPath: IndexPath) {
+        if let item = toDoItems?[indexPath.row] {
+            do {
+                try realm.write {
+                    realm.delete(item)
+                }
+            } catch {
+                print("Error deleting the to do item, \(error)")
+            }
+        }
     }
     
 }
