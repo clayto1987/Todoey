@@ -8,15 +8,18 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
 
     let realm = try! Realm()
     var categories: Results<Category>?
+    let colorsToExclude = [UIColor.flatGrayDark, UIColor.flatGray, UIColor.flatWhite, UIColor.flatWhiteDark, UIColor.flatBlack, UIColor.flatBlackDark, UIColor.flatSand, UIColor.flatSandDark]
     
     override func viewDidLoad() {
         super.viewDidLoad()
         loadCategories()
+        tableView.separatorStyle = .none
     }
 
     //MARK: - TableView DataSource Methods
@@ -27,7 +30,20 @@ class CategoryViewController: SwipeTableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet"
+        
+        if let category = categories?[indexPath.row] {
+        
+            cell.textLabel?.text = category.name
+            
+            guard let categoryColor = UIColor(hexString: category.color) else {fatalError()}
+            
+            cell.backgroundColor = categoryColor
+            cell.textLabel?.textColor = ContrastColorOf(categoryColor, returnFlat: true)
+            
+        } else {
+            cell.textLabel?.text = "No Categories Added Yet"
+        }
+
         return cell
     }
     
@@ -43,6 +59,7 @@ class CategoryViewController: SwipeTableViewController {
             if let textEntry = textField.text {
                 let newCategory = Category()
                 newCategory.name = textEntry
+                newCategory.color = UIColor.randomFlat.hexValue()
                 self.save(category: newCategory)
             }
             
